@@ -1,0 +1,34 @@
+name: Build Money Scene V2.1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'MoneyScene_V2_1_Android.zip'
+      - '.github/workflows/build-v2-1.yml'
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack Money Scene 2.1
+        run: unzip -o MoneyScene_V2_1_Android.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android SDK 35
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          test -n "$SDKMANAGER"
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile APK
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MoneyScene-V2-1-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
